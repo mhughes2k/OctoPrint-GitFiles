@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "OctoPrint-Gitfiles"
+version = "0.0.1"
+description = "TODO"
+authors = [
+    {name = "Michael Hughes", email = "michael@phoenixproductions.org.uk"}
+]
+readme = {file = "README.md", content-type = "text/markdown"}
+dynamic = [
+    "license"
+]
+
+requires-python = ">=3.7, <4"
+
+# any additional requirements (besides OctoPrint) should be listed here
+dependencies = []
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+include = [
+    "octoprint_gitfiles",
+    "octoprint_gitfiles.*"
+]
+
+[project.entry-points."octoprint.plugin"]
+gitfiles = "octoprint_gitfiles"
+
+[project.urls]
+Homepage = "https://github.com/mhughes2k/OctoPrint-Gitfiles"
+
+[project.optional-dependencies]
+develop = [
+    "go-task-bin"
+]
