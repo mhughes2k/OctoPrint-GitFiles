@@ -11,7 +11,9 @@ from __future__ import absolute_import
 
 import octoprint.plugin
 
-class GitfilesPlugin(octoprint.plugin.SettingsPlugin,
+class GitfilesPlugin(
+    octoprint.plugin.SimpleApiPlugin,
+    octoprint.plugin.SettingsPlugin,
     octoprint.plugin.AssetPlugin,
     octoprint.plugin.TemplatePlugin
 ):
@@ -19,9 +21,7 @@ class GitfilesPlugin(octoprint.plugin.SettingsPlugin,
     ##~~ SettingsPlugin mixin
 
     def get_settings_defaults(self):
-        return {
-            # put your plugin's default settings here
-        }
+        return dict(url="https://github.com/YourUserID/YourRepository.git", path="gitfiles")
 
     ##~~ AssetPlugin mixin
 
@@ -55,6 +55,77 @@ class GitfilesPlugin(octoprint.plugin.SettingsPlugin,
                 "pip": "https://github.com/mhughes2k/OctoPrint-Gitfiles/archive/{target_version}.zip",
             }
         }
+    # SimpleAPIPlugin mixin
+    def get_api_commands(self):
+        return dict(
+            git=["arg1"]
+        )
+    def on_api_command(self, command, data):
+        import flask
+        if command == "git":
+            if self._settings.get(["url"]) == "https://github.com/YourUserID/YourRepository.git":
+                self._logger.info("Problem with setup. Please visit Settings -> GitFiles and adjust the URL")
+                return
+
+            uploads = self._settings.global_get_basefolder("uploads")
+            path =    self._settings.get(["path"])
+            url =     self._settings.get(["url"])
+            verb =    "{arg1}".format(**data)
+            
+            if path == "" or path == "uploads":
+                gitfilesFolder = uploads
+            else:
+                gitfilesFolder = uploads + "/" + path
+            self._logger.info("Path: `{}`".format(gitfilesFolder))
+            # In the indicated path, issue a `git remote get-url origin` to determine whether
+            # or not it's been initialized before
+            try:
+                self._logger.info("Testing the indicated `{}` folder...".format(gitfilesFolder))
+                output =  call(["git", "remote", "get-url", "origin"], cwd=gitfilesFolder)
+                if output > 0:
+                    self.init(output, gitfilesFolder, url)
+            except OSError as e:
+                self._logger.info("Indicated folder is not initialized yet, throwing error")
+                output = "N/A"
+                self.init(output, gitfilesFolder, url)
+
+            # This one runs regardless of whether or not it's been previously initialized
+            try:
+                self._logger.info("-- git {} origin master ---------------------------------------------------".format(verb))
+                output =  call(["git", verb, "origin", "master"], cwd=gitfilesFolder)
+                self._logger.info("git returned: " + str(output))
+                self._logger.info("-- (end of git {}) --------------------------------------------------------".format(verb))
+            except OSError as e:
+                self._logger.info("`git {}` failed".format(verb))
+    
+    # This is called when an API command is issued to make sure
+    # that everything is actually working / set up correctly.
+    # It's not the plugin itself's initialization.
+    def init(self, output, gitfilesFolder, url):
+        self._logger.info("Path is not initialized already, returned error: `{}`".format(output))
+        # TODO: Test to see if the output is the correct remote
+        if not os.path.isdir(gitfilesFolder):
+            try:
+                self._logger.info("Creating the new `{}` subfolder...".format(gitfilesFolder))
+                os.mkdir(gitfilesFolder, 0o755)
+                self._logger.info("Created")
+            except OSError as e:
+                self._logger.info("Subfolder creation failed")
+                return
+        try:
+            self._logger.info("Initializing...")
+            output =  call(["git", "init"], cwd=gitfilesFolder)
+            self._logger.info(output)
+        except OSError as e:
+            self._logger.info("`git init` failed")
+            return
+        try:
+            self._logger.info("Setting up the remote origin for master...")
+            output =  call(["git", "remote", "add", "origin", url], cwd=gitfilesFolder)
+            self._logger.info(output)
+        except OSError as e:
+            self._logger.info("`git add remote origin` failed")
+            return
 
 
 # If you want your plugin to be registered within OctoPrint under a different name than what you defined in setup.py
@@ -62,17 +133,11 @@ class GitfilesPlugin(octoprint.plugin.SettingsPlugin,
 # can be overwritten via __plugin_xyz__ control properties. See the documentation for that.
 __plugin_name__ = "Gitfiles Plugin"
 
-
-# Set the Python version your plugin is compatible with below. Recommended is Python 3 only for all new plugins.
-# OctoPrint 1.4.0 - 1.7.x run under both Python 3 and the end-of-life Python 2.
-# OctoPrint 1.8.0 onwards only supports Python 3.
 __plugin_pythoncompat__ = ">=3,<4"  # Only Python 3
 
-def __plugin_load__():
-    global __plugin_implementation__
-    __plugin_implementation__ = GitfilesPlugin()
+__plugin_implementation__ = GitfilesPlugin()
 
-    global __plugin_hooks__
-    __plugin_hooks__ = {
-        "octoprint.plugin.softwareupdate.check_config": __plugin_implementation__.get_update_information
-    }
+
+__plugin_hooks__ = {
+    "octoprint.plugin.softwareupdate.check_config": __plugin_implementation__.get_update_information
+}

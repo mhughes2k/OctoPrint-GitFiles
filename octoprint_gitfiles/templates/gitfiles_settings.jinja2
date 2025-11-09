@@ -1,0 +1,43 @@
+<div>
+    <h3>{{ _('GitFiles settings') }}</h3>
+    <div style="clear:both">
+        See the <a href="https://github.com/OutsourcedGuru/OctoPrint-GitFiles" target="_blank">README.md</a> for how to setup your repository.
+        By default, the path for your files within OctoPrint will
+        be <code>~/.octoprint/uploads/gitfiles</code> as a subfolder. This would be the safest option if you expect to simply 
+        upload files straight to OctoPrint later.<br/><br/>
+        Otherwise, you can directly use the <code>uploads</code> folder itself by entering that in the Path field below. Note that this
+        option could result in git merge issues for you. If you know what you're doing, this may offer you some flexibility.<br/><br/>
+    </div>
+    <form class="form-horizontal">
+        <div class="control-group">
+            <label class="control-label">{{ _('URL:') }}</label>
+            <div class="controls">
+                <input type="text" class="input-block-level" data-bind="value: settings.plugins.gitfiles.url">
+            </div>
+        </div>
+        <div class="control-group">
+            <label class="control-label">{{ _('Path:') }}</label>
+            <div class="controls">
+                <input type="text" class="input-block-level" data-bind="value: settings.plugins.gitfiles.path">
+            </div>
+        </div>
+    </form>
+    <table><tr><td valign="top"><h3>{{ _('General workflow') }}</h3>
+        <ol>
+            <li>Into your workstation's local repository, slice the latest version of your files as gcode.</li>
+            <li>In this same folder on your workstation:
+                <ul><li><code>git add .</code></li><li><code>git commit -m "Commit-related information"</code></li><li><code>git push</code></li></ul></li>
+            <li>In OctoPrint, press the Github icon button to pull from the repository and wait for the latest version to download.</li>
+        </ol>
+        <p>If you earlier set up the Path to coincide with <b>uploads</b> and unless you are good with command-line git, it's best to not upload files directly to OctoPrint using the Files side panel feature.</p>
+        </td><td width="50%" valign="top" align="right">
+            <a href="https://github.com/OutsourcedGuru" target="_blank"><img src="plugin/gitfiles/static/img/profile.png"></a>
+        </td>
+    <tr><tr><td colspan="2"><hr/></td>
+    </tr><tr>
+        <td>Tip me (BTC)</td><td width="50%" align="right">Tip me (ETH)</td>
+    </tr><tr>
+        <td valign="top"><img src="plugin/gitfiles/static/img/btc-receive.png" width="250" height="250"></td>
+        <td width="50%" valign="top" align="right"><img src="plugin/gitfiles/static/img/eth-receive.png" width="280" height="280" style='margin-top: -15px; margin-right: -15px'></td>
+    </tr></table>
+</div>
